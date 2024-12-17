@@ -2,6 +2,7 @@ package com.microservice.loan.controller;
 
 import com.microservice.loan.constants.LoansConstants;
 import com.microservice.loan.dto.ErrorResponseDTO;
+import com.microservice.loan.dto.LoanContactInfoDTO;
 import com.microservice.loan.dto.LoanDTO;
 import com.microservice.loan.dto.ResponseDTO;
 import com.microservice.loan.service.LoanService;
@@ -14,6 +15,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -30,11 +34,23 @@ import org.springframework.web.bind.annotation.*;
 )
 @RestController
 @RequestMapping(path = "/v1", produces = {MediaType.APPLICATION_JSON_VALUE})
-@AllArgsConstructor
 @Validated
 public class LoanController {
 
     private LoanService loanService;
+
+    public LoanController(LoanService loanService) {
+        this.loanService = loanService;
+    }
+
+    @Value("${build.version}")
+    private String buildVersion;
+
+    @Autowired
+    private Environment environment;
+
+    @Autowired
+    private LoanContactInfoDTO loanContactInfoDTO;
 
     @Operation(
             summary = "Create Loan REST API",
@@ -162,6 +178,72 @@ public class LoanController {
                     .status(HttpStatus.EXPECTATION_FAILED)
                     .body(new ResponseDTO(LoansConstants.STATUS_417, LoansConstants.MESSAGE_417_DELETE));
         }
+    }
+
+    @Operation(
+            summary = "Get version information",
+            description = "REST API to get version information"
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "HTTP Status OK"
+            ),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "HTTP Status Internal Server Error",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponseDTO.class)
+                    )
+            )
+    })
+    @GetMapping("/version")
+    public ResponseEntity<String> getVersion() {
+        return ResponseEntity.ok(buildVersion);
+    }
+
+    @Operation(
+            summary = "Get Java Version information",
+            description = "REST API to get Java Version information"
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "HTTP Status OK"
+            ),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "HTTP Status Internal Server Error",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponseDTO.class)
+                    )
+            )
+    })
+    @GetMapping("/java-version")
+    public ResponseEntity<String> getJavaVersion() {
+        return ResponseEntity.ok(environment.getProperty("java.version"));
+    }
+
+    @Operation(
+            summary = "Get Contact information",
+            description = "REST API to get Contact information"
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "HTTP Status OK"
+            ),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "HTTP Status Internal Server Error",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponseDTO.class)
+                    )
+            )
+    })
+    @GetMapping("/contact-info")
+    public ResponseEntity<LoanContactInfoDTO> getContactInformation() {
+        return ResponseEntity.ok(loanContactInfoDTO);
     }
 
 }
